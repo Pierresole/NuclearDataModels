@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # nemo
 Neutron Evaluation Models
 =======
