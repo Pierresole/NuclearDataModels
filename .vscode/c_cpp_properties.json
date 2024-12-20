@@ -1,0 +1,22 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/usr/local/include/python3.10",
+                "/home/sole-pie01/download/ENDFtk/build/_deps/spdlog-src/include",
+                "/home/sole-pie01/download/ENDFtk/build/_deps/range-v3-src/include",
+                "/home/sole-pie01/download/ENDFtk/build/_deps/tools-src/src",
+                "/home/sole-pie01/download/ENDFtk/build/_deps/fast_float-src/include",
+                "/home/sole-pie01/download/ENDFtk/src"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "linux-gcc-x64"
+        }
+    ],
+    "version": 4
+}

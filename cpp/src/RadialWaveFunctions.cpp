@@ -1,0 +1,112 @@
+// RadialWaveFunctions.cpp
+#include "RadialWaveFunctions.h"
+
+void RadialWaveFunctions::P_S_Phi(unsigned int iL, double dRho2, double dEta) const {
+    if (dRho2 != rho2_) {
+        P_.clear();
+        S_.clear();
+        cos_phi_.clear();
+        sin_phi_.clear();
+        cos_2phi_.clear();
+        sin_2phi_.clear();
+        rho2_ = dRho2;
+    }
+
+    if (dRho2 >= 0) {
+        while (P_.size() < iL + 1) {
+            unsigned int l = P_.size();
+
+            switch (l) {
+                case 0:
+                    P_.push_back(std::sqrt(dRho2));
+                    S_.push_back(0.0);
+                    cos_phi_.push_back(std::cos(std::sqrt(dRho2)));
+                    sin_phi_.push_back(std::sin(std::sqrt(dRho2)));
+                    cos_2phi_.push_back(std::cos(2.0 * std::sqrt(dRho2)));
+                    sin_2phi_.push_back(std::sin(2.0 * std::sqrt(dRho2)));
+                    break;
+
+                default:
+                    double dP = P_.back();
+                    double dS = l - S_.back();
+                    double dY = dP / dS;
+                    double dX = 1.0 - std::pow(dY, 2);
+                    double dN = 1.0 / (1.0 + std::pow(dY, 2));
+                    double dZ = std::sqrt(dN);
+                    double dC = dRho2 / (std::pow(dS, 2) + std::pow(dP, 2));
+                    double dCos = cos_phi_.back();
+                    double dSin = sin_phi_.back();
+                    double dCos_2 = cos_2phi_.back();
+                    double dSin_2 = sin_2phi_.back();
+
+                    P_.push_back(dC * dP);
+                    S_.push_back(dC * dS - l);
+
+                    cos_phi_.push_back((dCos + dY * dSin) * dZ);
+                    sin_phi_.push_back((dSin - dY * dCos) * dZ);
+                    cos_2phi_.push_back((dX * dCos_2 + 2 * dY * dSin_2) * dN);
+                    sin_2phi_.push_back((dX * dSin_2 - 2 * dY * dCos_2) * dN);
+
+                    break;
+            }
+        }
+    } else {
+        while (P_.size() < iL + 1) {
+            unsigned int l = P_.size();
+
+            switch (l) {
+                case 0:
+                    P_.push_back(0.0);
+                    S_.push_back(-std::sqrt(-dRho2));
+                    cos_phi_.push_back(1.0);
+                    sin_phi_.push_back(0.0);
+                    cos_2phi_.push_back(1.0);
+                    sin_2phi_.push_back(0.0);
+                    break;
+
+                default:
+                    double dS = l - S_.back();
+
+                    P_.push_back(0.0);
+                    S_.push_back(dRho2 / dS - l);
+                    cos_phi_.push_back(1.0);
+                    sin_phi_.push_back(0.0);
+                    cos_2phi_.push_back(1.0);
+                    sin_2phi_.push_back(0.0);
+
+                    break;
+            }
+        }
+    }
+}
+
+void RadialWaveFunctions::computePenetration(unsigned int l, double dRho2) const {
+    double dP = P_.back();
+    double dS = l - S_.back();
+    double dC = dRho2 / (std::pow(dS, 2) + std::pow(dP, 2));
+    P_.push_back(dC * dP);
+}
+
+void RadialWaveFunctions::computeShift(unsigned int l, double dRho2) const {
+    double dP = P_.back();
+    double dS = l - S_.back();
+    double dC = dRho2 / (std::pow(dS, 2) + std::pow(dP, 2));
+    S_.push_back(dC * dS - l);
+}
+
+void RadialWaveFunctions::computePhase(unsigned int l) const {
+    double dP = P_.back();
+    double dS = l - S_.back();
+    double dY = dP / dS;
+    double dN = 1.0 / (1.0 + std::pow(dY, 2));
+    double dZ = std::sqrt(dN);
+    double dCos = cos_phi_.back();
+    double dSin = sin_phi_.back();
+    double dCos_2 = cos_2phi_.back();
+    double dSin_2 = sin_2phi_.back();
+
+    cos_phi_.push_back((dCos + dY * dSin) * dZ);
+    sin_phi_.push_back((dSin - dY * dCos) * dZ);
+    cos_2phi_.push_back((1.0 - std::pow(dY, 2)) * dCos_2 + 2 * dY * dSin_2);
+    sin_2phi_.push_back((1.0 - std::pow(dY, 2)) * dSin_2 - 2 * dY * dCos_2);
+}
