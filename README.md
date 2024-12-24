@@ -1,13 +1,10 @@
-# nemo
-Neutron Evaluation Models
+# Neutron Evaluation Models
 =======
-# PYRAT Project
-
-Start with plots and demonstrating the fun we can have being a pyrat.
+@TODO start with plots and demonstrating the fun we can have being a NEMO.
 
 ## Why ?
 
-This project is a modern Resonance Analysis Tool, developped as self-teaching neutron interaction theory. Initially developped to adding fun in reading "Neutron Interaction Theory - A.Foderaro".
+Developped as self-teaching neutron interaction theory. 
 
 Efficient implementation of physics formula were inspired from reading :
 - SAMMY Manual
@@ -15,6 +12,7 @@ Efficient implementation of physics formula were inspired from reading :
 - C.Jeannesson's thesis (future devlopment)
 - JEFF Report 18 
 - ENDF Manual
+- Neutron Interaction Theory - A.Foderaro
 
 ## Project Structure
 
