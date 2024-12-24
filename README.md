@@ -1,5 +1,6 @@
 # Neutron Evaluation Models
 =======
+
 @TODO start with plots and demonstrating the fun we can have being a NEMO.
 
 ## Why ?
@@ -17,7 +18,6 @@ Efficient implementation of physics formula were inspired from reading :
 ## Project Structure
 
 - `cpp/`: Contains the C++ code and Pybind11 setup for efficient reconstruction.
-- `python/`: Contains python script to levergae ENDFtk parser.
 - `notebooks/`: Jupyter notebooks for testing and exploring functionalities.
 
 ## Setup
