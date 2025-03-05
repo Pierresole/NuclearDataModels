@@ -1,13 +1,11 @@
-# Neutron Evaluation Models
+# M4NDE ? Models For Nuclear Data Evaluation
 =======
-
-@TODO start with plots and demonstrating the fun we can have being a NEMO.
 
 ## Why ?
 
-Developped as self-teaching neutron interaction theory. 
+Models used in nuclear data evaluation, easily callable from Python;
 
-Efficient implementation of physics formula were inspired from reading :
+Builds upon solid developments and pedagogical readings :
 - SAMMY Manual
 - G.Ferran's thesis
 - C.Jeannesson's thesis (future devlopment)
