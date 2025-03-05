@@ -1,4 +1,4 @@
-# M4NDE ? Models For Nuclear Data Evaluation
+Models For Nuclear Data Evaluation
 =======
 
 ## Why ?
