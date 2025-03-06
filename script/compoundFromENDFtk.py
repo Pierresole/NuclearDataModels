@@ -4,8 +4,8 @@ except ImportError:
     raise ImportError("The ENDFtk module is required but not installed.")
 
 import sys
-sys.path.append('/home/sole-pie01/mycodes/pyrat/build/python')
-import pyrat
+sys.path.append('/home/sole-pie01/codes/NuclearDataModels/build/python')
+import pyRMatrix
 
 def create_compound_nucleus(tape_string):
     # Parse the ENDF tape from the input string
@@ -17,7 +17,7 @@ def create_compound_nucleus(tape_string):
     # Prepare ParticlePair instances
     particle_pairs = []
     for ipp in range(resonance_range.parameters.particle_pairs.NPP):
-        particle_pair = pyrat.ParticlePair(
+        particle_pair = pyRMatrix.ParticlePair(
             float(resonance_range.parameters.particle_pairs.MA[ipp]),
             float(resonance_range.parameters.particle_pairs.MB[ipp]),
             float(resonance_range.parameters.particle_pairs.IA[ipp]),
@@ -36,7 +36,7 @@ def create_compound_nucleus(tape_string):
         # Collect channel data
         my_channels = []
         for iCH in range(resonance_range.parameters.spin_groups[iJP].NCH):
-            channel = pyrat.Channel(
+            channel = pyRMatrix.Channel(
                 particle_pairs[resonance_range.parameters.spin_groups[iJP].channels.PPI[iCH] - 1],
                 resonance_range.parameters.spin_groups[iJP].channels.L[iCH],
                 resonance_range.parameters.spin_groups[iJP].channels.APE[iCH],
@@ -49,14 +49,14 @@ def create_compound_nucleus(tape_string):
         # Collect resonance data
         my_resonances = []
         for iREZ in range(resonance_range.parameters.spin_groups[iJP].NRS):
-            resonance = pyrat.Resonance(
+            resonance = pyRMatrix.Resonance(
                 resonance_range.parameters.spin_groups[iJP].parameters.ER[iREZ],
                 resonance_range.parameters.spin_groups[iJP].parameters.GAM[iREZ]
             )
             my_resonances.append(resonance)
             # spin_group.addResonance(resonance)
 
-        spin_group = pyrat.SpinGroup(
+        spin_group = pyRMatrix.SpinGroup(
             J=float(resonance_range.parameters.spin_groups[iJP].AJ),
             PJ=int(resonance_range.parameters.spin_groups[iJP].PJ),
             channels=my_channels,
@@ -68,7 +68,7 @@ def create_compound_nucleus(tape_string):
     # Create the CompoundNucleus object
     entrance_particle_pair = particle_pairs[1]  # Assuming the first particle pair is the entrance channel
     print(entrance_particle_pair.MT())
-    compound_nucleus = pyrat.CompoundSystem(entrance_particle_pair, spin_groups)
+    compound_nucleus = pyRMatrix.CompoundSystem(entrance_particle_pair, spin_groups)
     # for spin_group in spin_groups:
     #     compound_nucleus.addSpinGroup(spin_group)
     

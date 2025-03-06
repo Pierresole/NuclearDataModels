@@ -1,27 +1,41 @@
-# Top-level CMakeLists.txt
 cmake_minimum_required(VERSION 3.14)
-project(pyrat LANGUAGES CXX)
+project(NuclearDataModels LANGUAGES CXX)
 
+# Set C++ standard
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# # Specify Python 3.10 paths explicitly
-# set(Python3_EXECUTABLE /usr/local/bin/python3.10)
-# set(Python3_INCLUDE_DIR /usr/local/include/python3.10)
-# set(Python3_LIBRARY /usr/local/lib/libpython3.10.so)
-# set(PYTHON_EXECUTABLE /usr/local/bin/python3.10 CACHE FILEPATH "Python interpreter")
-# set(PYTHON_LIBRARY /usr/local/lib/libpython3.10.so CACHE FILEPATH "Python library")
-# set(PYTHON_INCLUDE_DIR /usr/local/include/python3.10 CACHE FILEPATH "Python include directory")
+# find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
 
-# # Prevent CMake from finding other Python versions
-# unset(Python_ADDITIONAL_VERSIONS)
-# set(Python_ADDITIONAL_VERSIONS "3.10")
+# Fetch Eigen (if needed)
+include(FetchContent)
+FetchContent_Declare(
+  Eigen
+  GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git
+  GIT_TAG master
+  GIT_SHALLOW TRUE
+)
+set(EIGEN_BUILD_TESTING OFF)
+set(EIGEN_MPL2_ONLY ON)
+FetchContent_MakeAvailable(Eigen)
 
-find_package(PythonLibs 3.10 REQUIRED)
-find_package(PythonInterp 3.10 REQUIRED)
+# Common include directory
+include_directories(${CMAKE_SOURCE_DIR}/include)
 
-find_package(Python3 3.10 REQUIRED COMPONENTS Interpreter Development)
+# Add subdirectories for each model library:
+add_subdirectory(src/RMatrix)
+# add_subdirectory(src/Thermal)
+# add_subdirectory(src/Optical)
 
-find_package(pybind11 REQUIRED)
+# Add Python bindings subdirectories:
+add_subdirectory(bindings/python/RMatrix)
+# add_subdirectory(bindings/python/Thermal)
+# add_subdirectory(bindings/python/Optical)
 
-add_subdirectory(cpp)
+# Custom clean command that preserves _deps directory
+add_custom_target(clean-except-deps
+    COMMAND ${CMAKE_COMMAND} -E echo "Cleaning build directory except _deps/"
+    COMMAND find ${CMAKE_BINARY_DIR} -mindepth 1 -maxdepth 1 -not -name "_deps" -type d -exec ${CMAKE_COMMAND} -E remove_directory {} +
+    COMMAND find ${CMAKE_BINARY_DIR} -mindepth 1 -maxdepth 1 -not -name "_deps" -type f -exec ${CMAKE_COMMAND} -E remove {} +
+    COMMENT "Cleaning build directory while preserving _deps/"
+)

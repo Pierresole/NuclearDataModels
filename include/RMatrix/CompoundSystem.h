@@ -5,6 +5,7 @@
 #include "SpinGroup.h"
 #include "ParticlePair.h"
 #include <map>
+#include <iostream>
 #include <string>
 #include <ranges>
 

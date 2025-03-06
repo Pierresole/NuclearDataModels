@@ -7,7 +7,6 @@
 #include "Channel.h"
 #include "ParticlePair.h"
 #include "FormalismParameters.h"
-#include "ThermalScattering.h"
 #include "Mlbw.h"  // Include the MLBW header
 #include "CrossSectionCalculator.h"
 
@@ -153,7 +152,7 @@ public:
     }
 };
 
-PYBIND11_MODULE(pyrat, m) {
+PYBIND11_MODULE(pyRMatrix, m) {
 
     py::class_<FormalismParametersWrapper>(m, "FormalismParametersWrapper")
         .def(py::init<>())
@@ -194,33 +193,6 @@ PYBIND11_MODULE(pyrat, m) {
     py::class_<RMatrixParameters>(m, "RMatrixParameters")
         .def(py::init<>())
         .def_readwrite("JPiGroups", &RMatrixParameters::JPiGroups);
-
-    py::class_<SAlphaBeta>(m, "SAlphaBeta")
-        .def(py::init<
-            double,
-            double, // Add w_s parameter
-            const std::vector<double>&,
-            const std::vector<double>&,
-            int,
-            const std::vector<double>&,
-            const std::vector<double>&,
-            const std::vector<std::tuple<double, double, std::string, double>>&>(),
-            py::arg("temperature"),
-            py::arg("w_s"), // Add w_s argument
-            py::arg("alpha_grid"),
-            py::arg("beta_grid"),
-            py::arg("n_max"),
-            py::arg("energy_grid"),
-            py::arg("rho_energy"),
-            py::arg("peaks") = std::vector<std::tuple<double, double, std::string, double>>())
-        .def("compute_S_alpha_beta", &SAlphaBeta::compute_S_alpha_beta)
-        .def("get_S_alpha_beta", &SAlphaBeta::get_S_alpha_beta)
-        .def("get_alpha_grid", &SAlphaBeta::get_alpha_grid)
-        .def("get_beta_grid", &SAlphaBeta::get_beta_grid)
-        .def("get_lambda", &SAlphaBeta::get_lambda)
-        .def("get_T_s_bar", &SAlphaBeta::get_T_s_bar)
-        .def("get_alpha_max", &SAlphaBeta::get_alpha_max)
-        .def("output_debug_information", &SAlphaBeta::output_debug_information);
 
     py::class_<CrossSectionCalculatorWrapper>(m, "CrossSectionCalculator")
         .def(py::init<const py::dict&, double>(), py::arg("data"), py::arg("A"))
