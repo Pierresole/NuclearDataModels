@@ -22,11 +22,12 @@ Builds upon solid developments and pedagogical readings :
 
 ### Build Pyrat Extension
 
+Activate your python environment if any.
 Navigate to the main directory and build the extension:
 
 ```sh
 mkdir build; cd build;
-cmake ..
+cmake -D Python3_EXECUTABLE=$(which python3) ..
 make
 ```
 
