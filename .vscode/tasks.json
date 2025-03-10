@@ -4,12 +4,10 @@
         {
             "label": "CMake: Configure",
             "type": "shell",
-            "command": "cmake",
+            "command": "bash",
             "args": [
-                "-S",
-                ".",
-                "-B",
-                "build"
+                "-c",
+                "eval \"$(mamba shell hook --shell bash)\" && mamba activate nd && mkdir -p build && cd build && cmake -D Python3_EXECUTABLE=$(which python3) .."
             ],
             "group": {
                 "kind": "build",

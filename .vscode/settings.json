@@ -1,5 +1,5 @@
 {
-    "cmake.sourceDirectory": "/home/sole-pie01/mycodes/pyrat",  // Ensure the root CMakeLists.txt is used
+    "cmake.sourceDirectory": "/home/sole-pie01/codes/NuclearDataModels",  // Ensure the root CMakeLists.txt is used
     "cmake.configureOnOpen": true,
     "cmake.buildDirectory": "${workspaceFolder}/build",
     "files.associations": {
@@ -73,6 +73,23 @@
         "typeinfo": "cpp",
         "valarray": "cpp",
         "variant": "cpp",
-        "hash_map": "cpp"
+        "hash_map": "cpp",
+        "core": "cpp",
+        "superlusupport": "cpp",
+        "*.evaluator": "cpp",
+        "*.traits": "cpp",
+        "adolcforward": "cpp",
+        "alignedvector3": "cpp",
+        "autodiff": "cpp",
+        "bvh": "cpp",
+        "eulerangles": "cpp",
+        "fft": "cpp",
+        "kroneckerproduct": "cpp",
+        "mprealsupport": "cpp",
+        "nnls": "cpp",
+        "numericaldiff": "cpp",
+        "openglsupport": "cpp",
+        "specialfunctions": "cpp",
+        "splines": "cpp"
     }
 }

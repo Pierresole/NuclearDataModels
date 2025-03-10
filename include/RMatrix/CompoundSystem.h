@@ -51,6 +51,14 @@ public:
     //     }
     //     return totalCrossSection;
     // }
+    
+    double crossSection(double E) {
+        double sigma_total = 0.0;
+        for (const auto& sg : spinGroups_) {
+            sigma_total += sg.spinStatisticalFactor() * sg.computeCrossSection(E, particlePair_);
+        }
+        return sigma_total;
+    }
 };
 
 #endif // COMPOUNDSYSTEM_H
