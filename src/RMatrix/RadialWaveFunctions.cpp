@@ -80,6 +80,40 @@ void RadialWaveFunctions::P_S_Phi(unsigned int iL, double dRho2, double dEta) co
     }
 }
 
+double RadialWaveFunctions::channelPenetrationAndShift(unsigned int l, double rho2) const {
+    double P = 0.0, S = 0.0;
+    double rho = std::sqrt(std::abs(rho2));
+
+    if (rho2 >= 0.0) {
+        // Positive energy channel
+        if (l == 0) {
+            P = rho;
+        } else {
+            double P_prev = rho, S_prev = 0.0;
+            for (unsigned int i = 1; i <= l; ++i) {
+                double denom = std::pow(i - S_prev, 2) + std::pow(P_prev, 2);
+                P = (rho2 * P_prev) / denom;
+                S = (rho2 * (i - S_prev)) / denom - i;
+                P_prev = P;
+                S_prev = S;
+            }
+        }
+    } else {
+        // Negative energy channel
+        if (l == 0) {
+            S = -std::sqrt(-rho2);
+        } else {
+            double S_prev = -std::sqrt(-rho2);
+            for (unsigned int i = 1; i <= l; ++i) {
+                S = (rho2 / (i - S_prev)) - i;
+                S_prev = S;
+            }
+        }
+    }
+
+    return P;
+}
+
 void RadialWaveFunctions::computePenetration(unsigned int l, double dRho2) const {
     double dP = P_.back();
     double dS = l - S_.back();

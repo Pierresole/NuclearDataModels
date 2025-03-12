@@ -4,18 +4,21 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/usr/local/include/python3.10",
-                "/home/sole-pie01/download/ENDFtk/build/_deps/spdlog-src/include",
-                "/home/sole-pie01/download/ENDFtk/build/_deps/range-v3-src/include",
-                "/home/sole-pie01/download/ENDFtk/build/_deps/tools-src/src",
-                "/home/sole-pie01/download/ENDFtk/build/_deps/fast_float-src/include",
-                "/home/sole-pie01/download/ENDFtk/src"
+                "/home/sole-pie01/.local/share/mamba/envs/nd/include",
+                "/home/sole-pie01/codes/ENDFtk/build/_deps/spdlog-src/include",
+                "/home/sole-pie01/codes/ENDFtk/build/_deps/range-v3-src/include",
+                "/home/sole-pie01/codes/ENDFtk/build/_deps/tools-src/src",
+                "/home/sole-pie01/codes/ENDFtk/build/_deps/fast_float-src/include",
+                "/home/sole-pie01/codes/ENDFtk/src"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
             "cStandard": "c17",
             "cppStandard": "c++17",
-            "intelliSenseMode": "linux-gcc-x64"
+            "intelliSenseMode": "linux-gcc-x64",
+            "compileCommands": [
+                "${workspaceFolder}/build/compile_commands.json"
+            ]
         }
     ],
     "version": 4

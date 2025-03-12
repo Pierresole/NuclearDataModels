@@ -17,6 +17,7 @@ public:
     double getSinPhi(unsigned int l) const { return sin_phi_.at(l); }
     double getCos2Phi(unsigned int l) const { return cos_2phi_.at(l); }
     double getSin2Phi(unsigned int l) const { return sin_2phi_.at(l); }
+    double channelPenetrationAndShift(unsigned int l, double rho2) const;
 
 private:
     double AP;

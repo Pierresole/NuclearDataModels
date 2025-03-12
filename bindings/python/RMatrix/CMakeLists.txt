@@ -20,13 +20,23 @@ target_link_libraries(pyRMatrix PRIVATE RMatrix_model pybind11::module Eigen3::E
 target_include_directories(pyRMatrix PRIVATE ${CMAKE_SOURCE_DIR}/include/RMatrix ${eigen_SOURCE_DIR})
 
 # Fix site-packages detection
+# execute_process(
+#   COMMAND "${Python3_EXECUTABLE}" -c "import site; print(site.getsitepackages()[0])"
+#   OUTPUT_VARIABLE PYTHON_SITE_PACKAGES
+#   OUTPUT_STRIP_TRAILING_WHITESPACE
+# )
+
 execute_process(
   COMMAND "${Python3_EXECUTABLE}" -c "import site; print(site.getsitepackages()[0])"
   OUTPUT_VARIABLE PYTHON_SITE_PACKAGES
+  ERROR_VARIABLE PYTHON_SITE_PACKAGES_ERR
+  RESULT_VARIABLE PYTHON_RESULT
   OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
 message(STATUS "Python site-packages directory: ${PYTHON_SITE_PACKAGES}")
+message(STATUS "Python site-packages error: ${PYTHON_SITE_PACKAGES_ERR}")
+message(STATUS "Python command result: ${PYTHON_RESULT}")
 
 # Install target to the site-packages directory
 install(TARGETS pyRMatrix 

@@ -1,11 +1,9 @@
+/*
 #ifndef CROSS_SECTION_CALCULATOR_H
 #define CROSS_SECTION_CALCULATOR_H
 
 #include "SpinGroup.h"
 #include "RMatrix.h"
-#include "LevelMatrix.h"
-#include "XMatrix.h"
-#include "CollisionMatrix.h"
 #include <vector>
 #include <string>
 
@@ -25,3 +23,4 @@ private:
 };
 
 #endif // CROSS_SECTION_CALCULATOR_H
+*/

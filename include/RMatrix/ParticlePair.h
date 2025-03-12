@@ -2,6 +2,7 @@
 #define PARTICLE_PAIR_H
 
 #include <string>
+#include <iostream>
 
 class ParticlePair {
 private:
@@ -15,13 +16,18 @@ private:
     bool entrance_;
     int MT_;
     std::string reactionID_;
+    const double m_neutron = 1.00866491600;    //mass of a neutron in amu
 
 public:
     ParticlePair(double massA, double massB, double spinA, double spinB, double QI,
                  int parityA, int parityB, int MT)
-        : massParticleA_(massA), massParticleB_(massB),
-          spinParticleA_(spinA), spinParticleB_(spinB),
-          QI_(QI), parityParticleA_(parityA), parityParticleB_(parityB), MT_(MT) {}
+        : spinParticleA_(spinA), spinParticleB_(spinB),
+          QI_(QI), 
+          parityParticleA_(parityA), parityParticleB_(parityB), 
+          MT_(MT) {
+            massParticleA_ = massA*m_neutron; 
+            massParticleB_ = massB*m_neutron;
+          }
 
     ParticlePair(double massB, const std::string& reactionID) : massParticleB_(massB), reactionID_(reactionID) {};
     ParticlePair(double massB) : massParticleB_(massB) {};

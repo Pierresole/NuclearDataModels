@@ -1,3 +1,4 @@
+/*
 #include "CrossSectionCalculator.h"
 #include <iostream>
 #include <cmath>
@@ -111,3 +112,4 @@ std::vector<double> CrossSectionCalculator::computeCrossSections(const std::vect
 
     return crossSections; // Return the vector of cross sections
 }
+*/
