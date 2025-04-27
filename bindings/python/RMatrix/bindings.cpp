@@ -310,6 +310,16 @@ PYBIND11_MODULE(pyRMatrix, m) {
              py::arg("Q"), 
              py::arg("parity1"), py::arg("parity2"), 
              py::arg("MT"))
+        .def_static(
+            "neutron_incident",
+            &ParticlePair::neutronIncident,
+            py::arg("mass2"),
+            py::arg("spin2"),
+            py::arg("Q"),
+            py::arg("parity2"),
+            py::arg("MT"),
+            "Construct a ParticlePair with a neutron as the incident particle"
+        )
         .def("mass1", &ParticlePair::mass1)
         .def("mass2", &ParticlePair::mass2)
         .def("spin1", &ParticlePair::spin1)

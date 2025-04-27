@@ -16,7 +16,7 @@ private:
     bool entrance_;
     int MT_;
     std::string reactionID_;
-    const double m_neutron = 1.00866491600;    //mass of a neutron in amu
+    inline static const double m_neutron_ = 1.00866491600;    //mass of a neutron in amu, static for access
 
 public:
     ParticlePair(double massA, double massB, double spinA, double spinB, double QI,
@@ -25,12 +25,17 @@ public:
           QI_(QI), 
           parityParticleA_(parityA), parityParticleB_(parityB), 
           MT_(MT) {
-            massParticleA_ = massA*m_neutron; 
-            massParticleB_ = massB*m_neutron;
+            massParticleA_ = massA*m_neutron_; 
+            massParticleB_ = massB*m_neutron_;
           }
 
     ParticlePair(double massB, const std::string& reactionID) : massParticleB_(massB), reactionID_(reactionID) {};
     ParticlePair(double massB) : massParticleB_(massB) {};
+
+    // Static factory method for neutron incident
+    static ParticlePair neutronIncident(double massB, double spinB, double QI, int parityB, int MT) {
+        return ParticlePair(1, massB, 0.5, spinB, QI, 1, parityB, MT);
+    }
 
     // Method to calculate wave number squared (k^2)
     double k2(double E, const ParticlePair& entranceParticlePair, bool isKinematicRelativistic = false) const {
