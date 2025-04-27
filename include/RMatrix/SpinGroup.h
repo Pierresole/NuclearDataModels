@@ -268,16 +268,37 @@ public:
     }
 
     // Loop on channels of this spingroup
+    // See p.30 SAMMY UG7
+    // Using U or the X matrix yields the same results
     double crossSection(double E, const ParticlePair& entrancePP) const {
-        Eigen::MatrixXcd U = computeCollisionMatrix(E, entrancePP);
-        
         double sigma = 0.0;
         int nChannels = channels_.size();
+        double factor = (2*M_PI/(entrancePP.k2(E, entrancePP)));
+
+        Eigen::MatrixXcd U = computeCollisionMatrix(E, entrancePP);
         for (int c = 0; c < nChannels; ++c) {
-            double partialSigmaJ = (2*M_PI/(entrancePP.k2(E, entrancePP))) * (1. - U(c,c).real());
+            double partialSigmaJ = factor * (1. - U(c,c).real());
             sigma += partialSigmaJ;
         }
         return sigma;
+
+        // std::vector<Channel::ChannelQuantities> channelQuantities;
+        // channelQuantities.reserve(nChannels);
+        // // First calculate all channel quantities and store them
+        // for (int c = 0; c < nChannels; ++c) {
+        //     channelQuantities.push_back(channels_[c].computeChannelQuantities(E, entrancePP));
+        // }
+        // auto X = computeXMatrix(E, channelQuantities);
+        // for (int c = 0; c < nChannels - 1; ++c) {
+        //     // Sum on channels where alpha' is alpha
+        //     if(channels_[c].getParticlePair().MT() != 2) continue;
+        //     const auto& cQuant = channelQuantities[c];
+        //     double partialSigmaJ = 2 * factor * (std::pow(std::sin(cQuant.phi),2) 
+        //                                         + X(c,c).imag()*std::cos(2 * cQuant.phi)
+        //                                         - X(c,c).real()*std::sin(2 * cQuant.phi));
+        //     sigma += partialSigmaJ;
+        // }
+        // return sigma;
     }
 
     Eigen::MatrixXcd computeCollisionMatrix(double E, const ParticlePair& entrancePP) const {
@@ -304,7 +325,7 @@ public:
                 const auto& cpQuant = channelQuantities[cp];
                 double sqrtP_cp = sqrt(cpQuant.P);
                 std::complex<double> phase_cp = std::exp( - std::complex<double>(0, 1) * cpQuant.phi);
-
+                // W = I + 2iX    and   U = Oc * W * Oc'
                 // if (c == cp) {
                     Collision(c, cp) = phase_c * (1.0 + 2.0 * std::complex<double>(0, 1) * X(c, cp)) * phase_cp;
                 // } else {
@@ -344,7 +365,6 @@ public:
                     
                     // Base denominator
                     std::complex<double> denominator(resonance.getEnergy() - E, 0.0);
-                    
                     // Add contribution from eliminated channels to denominator
                     if (nEliminated > 0) {
                         std::complex<double> D(0.0, 0.0);
@@ -372,8 +392,10 @@ public:
         }
         
         // Now create the X matrix using only retained channels
-        Eigen::MatrixXcd X(nRetained, nRetained);
-        Eigen::MatrixXcd L(nRetained, nRetained), sqrtP(nRetained, nRetained);
+        // Eigen::MatrixXcd X, L, sqrtP = Eigen::MatrixXcd::Zero(nRetained, nRetained);
+        Eigen::MatrixXcd X = Eigen::MatrixXcd::Zero(nRetained, nRetained);
+        Eigen::MatrixXcd L = Eigen::MatrixXcd::Zero(nRetained, nRetained);
+        Eigen::MatrixXcd sqrtP = Eigen::MatrixXcd::Zero(nRetained, nRetained);
         
         // Fill the L and sqrtP matrices for retained channels
         for (int i = 0; i < nRetained; ++i) {
@@ -390,10 +412,10 @@ public:
         // std::cout << Rcc << std::endl;
         // std::cout << "X" << std::endl;
         // std::cout << X << std::endl;
+        // std::cout << "L" << std::endl;
+        // std::cout << L << std::endl;
         // std::cout << "Id - R*L" << std::endl;
         // std::cout << (Eigen::MatrixXcd::Identity(nRetained, nRetained) - Rcc * L) << std::endl;
-        // std::cout << "(Id - R*L)^-1 * R" << std::endl;
-        // std::cout << (Eigen::MatrixXcd::Identity(nRetained, nRetained) - Rcc * L).inverse() * Rcc << std::endl;
 
         // Create and return full X matrix with zeros for eliminated channels
         Eigen::MatrixXcd fullX = Eigen::MatrixXcd::Zero(nTotalChannels, nTotalChannels);
