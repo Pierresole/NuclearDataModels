@@ -55,7 +55,6 @@ public:
             sigma_total += (2 * sg.getJ() + 1) / 
                         ((2 * entranceParticlePair_.spin1() + 1)*(2 * entranceParticlePair_.spin2() + 1)) * 
                         sg.crossSection(E, entranceParticlePair_);
-            std::cout << "sigma_total = " << sigma_total << std::endl;
         }
         return sigma_total;
     }
