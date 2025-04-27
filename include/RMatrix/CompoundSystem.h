@@ -37,7 +37,8 @@ public:
 
     void printSpinGroupInfo() const {
         for (size_t iSg = 0; iSg < spinGroups_.size(); ++iSg) {
-            std::cout << "Spin Group " << iSg << " has " << spinGroups_[iSg].channels().size() << " channels." << std::endl;
+            std::cout << "Spin Group " << iSg << "/" << spinGroups_.size() << " (" << spinGroups_[iSg].getJ() << ", "<< spinGroups_[iSg].getPJ() << "):"
+                      << " has " << spinGroups_[iSg].channels().size() << " channels." << std::endl;
             for(size_t iRes = 0; iRes < spinGroups_[iSg].getResonances().size(); iRes++){
                 std::cout << "Resonance " << spinGroups_[iSg].getResonances()[iRes].getEnergy() << " ";
                 for(size_t iCH = 0; iCH < spinGroups_[iSg].channels().size(); iCH++){
@@ -54,6 +55,7 @@ public:
             sigma_total += (2 * sg.getJ() + 1) / 
                         ((2 * entranceParticlePair_.spin1() + 1)*(2 * entranceParticlePair_.spin2() + 1)) * 
                         sg.crossSection(E, entranceParticlePair_);
+            std::cout << "sigma_total = " << sigma_total << std::endl;
         }
         return sigma_total;
     }
