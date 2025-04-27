@@ -1,1 +1,9 @@
 build/
+pyrat.egg-info/dependency_links.txt
+pyrat.egg-info/not-zip-safe
+pyrat.egg-info/PKG-INFO
+pyrat.egg-info/SOURCES.txt
+pyrat.egg-info/top_level.txt
+scripts/__pycache__/compoundFromENDFtk.cpython-310.pyc
+scripts/__pycache__/compoundFromENDFtk.cpython-311.pyc
+scripts/__pycache__/compoundFromENDFtk.cpython-313.pyc
