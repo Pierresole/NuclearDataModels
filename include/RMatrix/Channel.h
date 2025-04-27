@@ -84,6 +84,7 @@ public:
     }
 
     double computePenetration(double E, const ParticlePair& entranceParticlePair) const {
+        if(particlePair_.MT() == 102 || particlePair_.MT() == 18) return 1;
         // Compute k^2 and k
         double k2 = particlePair_.k2(E, entranceParticlePair, false);
         // double k = std::sqrt(k2);
