@@ -1,11 +1,13 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.20)
 project(NuclearDataModels LANGUAGES CXX)
 
 # Set C++ standard
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+message(STATUS "Using Python headers from: ${Python3_INCLUDE_DIRS}")
+message(STATUS "Using Python library from: ${Python3_LIBRARIES}")
 
 # Fetch Eigen (if needed)
 include(FetchContent)
@@ -18,6 +20,14 @@ FetchContent_Declare(
 set(EIGEN_BUILD_TESTING OFF)
 set(EIGEN_MPL2_ONLY ON)
 FetchContent_MakeAvailable(Eigen)
+
+FetchContent_Declare(
+  pybind11
+  GIT_REPOSITORY https://github.com/pybind/pybind11.git
+  GIT_TAG        v2.13.6
+)
+FetchContent_MakeAvailable(pybind11)
+
 
 # Common include directory
 include_directories(${CMAKE_SOURCE_DIR}/include)
