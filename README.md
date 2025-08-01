@@ -7,18 +7,62 @@
 ![Python](https://img.shields.io/badge/Python-3.8+-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![Build](https://img.shields.io/badge/CMake-Eigen3-green?style=for-the-badge)
 
-## 🎯 Showcase: Elastic Cross Section Analysis
+## 🎯 Showcase: Intuitive Nuclear Physics API
 
-Visualize nuclear cross sections with publication-ready plots in just 2 lines of Python:
+Experience the elegance of our C++ bindings - nuclear physics calculations become as simple as calling methods:
 
 ```python
+import numpy as np
+import matplotlib.pyplot as plt
+from scripts.compoundFromENDFtk import create_compound_from_ReichMoore
+
+# Load nuclear data with one line
 compound_system = create_compound_from_ReichMoore('Pu-239.endf')
-plot_elastic_comparison(compound_system)
+
+# Inspect the nuclear structure
+compound_system.printSpinGroupInfo()
+# → Spin Group 0/2 (0.5, 1): has 3 channels.
+# → Spin Group 1/2 (1.5, 1): has 3 channels.
+
+# Calculate cross sections at any energy
+thermal_energy = 0.0253  # eV
+print(f"At thermal energy ({thermal_energy} eV):")
+print(f"  Elastic:  {compound_system.elasticCrossSection(thermal_energy):.1f} barns")
+print(f"  Capture:  {compound_system.captureCrossSection(thermal_energy):.1f} barns") 
+print(f"  Fission:  {compound_system.fissionCrossSection(thermal_energy):.1f} barns")
+print(f"  Total:    {compound_system.totalCrossSection(thermal_energy):.1f} barns")
 ```
 
-![Elastic Cross Section Example](images/cross_section_demo.png)
+![Nuclear Reactions](images/nuclear_reactions_demo.png)
 
-*Individual spin group contributions to elastic scattering in ²³⁹Pu, demonstrating resonance structures and quantum mechanical interference effects.*
+*Multiple nuclear reaction types calculated with simple, intuitive method calls on the compound system object.*
+
+```python
+# Individual spin group contributions (J-π physics!)
+j_half_elastic = compound_system.spinGroupElasticCrossSection(0, thermal_energy)
+j_3half_elastic = compound_system.spinGroupElasticCrossSection(1, thermal_energy)
+print(f"J=1/2 elastic: {j_half_elastic:.1f} barns")
+print(f"J=3/2 elastic: {j_3half_elastic:.1f} barns")
+
+# Energy-dependent analysis
+energies = np.logspace(-2, 2, 1000)  # 0.01 to 100 eV
+elastic_xs = [compound_system.elasticCrossSection(E) for E in energies]
+capture_xs = [compound_system.captureCrossSection(E) for E in energies]
+
+# Create publication-ready plot
+plt.figure(figsize=(10, 6))
+plt.loglog(energies, elastic_xs, label='Elastic', linewidth=2.5)
+plt.loglog(energies, capture_xs, label='Capture (n,γ)', linewidth=2.5)
+plt.xlabel('Energy (eV)')
+plt.ylabel('Cross Section (barns)')
+plt.legend()
+plt.grid(True, alpha=0.3)
+plt.show()
+```
+
+![Spin Groups](images/spin_groups_demo.png)
+
+*Quantum mechanical spin group decomposition showing individual J-π contributions to elastic scattering.*
 
 ## ✨ Key Features
 
@@ -227,14 +271,21 @@ from scripts.compoundFromENDFtk import create_compound_from_ReichMoore
 # Load nuclear data (Pu-239 example)
 compound = create_compound_from_ReichMoore('n-094_Pu_239.endf')
 
-# Calculate cross sections
+# Nuclear physics at your fingertips!
 energy = 1.0  # eV
 print(f"Elastic:  {compound.elasticCrossSection(energy):.2f} barns")
 print(f"Capture:  {compound.captureCrossSection(energy):.2f} barns") 
 print(f"Fission:  {compound.fissionCrossSection(energy):.2f} barns")
 print(f"Total:    {compound.totalCrossSection(energy):.2f} barns")
 
-# Quick visualization
+# Spin group decomposition (quantum mechanics made easy!)
+n_groups = len([sg for sg in compound.spinGroups()])
+for i in range(n_groups):
+    J = compound.getSpinGroup(i).getJ()
+    elastic_j = compound.spinGroupElasticCrossSection(i, energy)
+    print(f"J={J} elastic: {elastic_j:.2f} barns")
+
+# Quick visualization with our plotting utilities
 from scripts.plot_cross_sections import plot_all_reactions
 plot_all_reactions(compound)
 ```
@@ -307,6 +358,8 @@ mlbw = pyRMatrix.MLBW(wrapper.data.parameters.mlbw)
 
 ### 📈 Publication-Ready Plotting
 
+While the compound system API provides direct access to all physics calculations, we also include convenient plotting utilities for quick visualization:
+
 ```python
 from scripts.plot_cross_sections import *
 
@@ -318,32 +371,87 @@ plot_all_reactions(compound)
 
 # Customizable energy ranges and styling
 plot_elastic_comparison(compound, energy_range=(-3, 3), save_path='figure.png')
+
+# But remember - you can always build custom plots using the direct API:
+energies = np.logspace(-2, 2, 1000)
+elastic_xs = [compound.elasticCrossSection(E) for E in energies]
+plt.loglog(energies, elastic_xs, label='Custom Plot')
 ```
 
 ## 🧪 Example Calculations
 
-### Resonance Analysis
+### Resonance Analysis & Spin Group Physics
 ```python
-# Examine individual resonances
+# Examine nuclear structure
 compound.printSpinGroupInfo()
+# → Spin Group 0/2 (0.5, 1): has 3 channels.
+# → Spin Group 1/2 (1.5, 1): has 3 channels.
 
-# Calculate at resonance energy
-resonance_energy = 0.296  # eV (Pu-239 resonance)
-xs_at_resonance = compound.totalCrossSection(resonance_energy)
-print(f"Cross section at resonance: {xs_at_resonance:.0f} barns")
+# Calculate at thermal and resonance energies
+thermal_energy = 0.0253   # eV (room temperature)
+resonance_energy = 0.296  # eV (Pu-239 major resonance)
+
+print("At thermal energy:")
+print(f"  Total: {compound.totalCrossSection(thermal_energy):.0f} barns")
+print(f"  J=1/2: {compound.spinGroupTotalCrossSection(0, thermal_energy):.0f} barns")
+print(f"  J=3/2: {compound.spinGroupTotalCrossSection(1, thermal_energy):.0f} barns")
+
+print(f"\nAt resonance ({resonance_energy} eV):")
+print(f"  Total: {compound.totalCrossSection(resonance_energy):.0f} barns")
+print(f"  Elastic: {compound.elasticCrossSection(resonance_energy):.0f} barns")
+print(f"  Fission: {compound.fissionCrossSection(resonance_energy):.0f} barns")
 ```
 
-### Energy-dependent Cross Sections
+### Energy-dependent Cross Sections & Peak Finding
 ```python
 import numpy as np
 
 # Thermal to fast neutron range
 energies = np.logspace(-3, 6, 1000)  # 1 meV to 1 MeV
-cross_sections = [compound.totalCrossSection(E) for E in energies]
 
-# Find resonance peaks
-peaks = np.where(np.array(cross_sections) > 1000)[0]
+# Vectorized calculations using our elegant API
+total_xs = [compound.totalCrossSection(E) for E in energies]
+elastic_xs = [compound.elasticCrossSection(E) for E in energies]
+capture_xs = [compound.captureCrossSection(E) for E in energies]
+
+# Physics analysis
+peaks = np.where(np.array(total_xs) > 1000)[0]
+max_xs = max(total_xs)
+max_energy = energies[np.argmax(total_xs)]
+
 print(f"Found {len(peaks)} resonance peaks above 1000 barns")
+print(f"Maximum cross section: {max_xs:.0f} barns at {max_energy:.3f} eV")
+
+# Reaction branching ratios
+thermal_idx = np.argmin(np.abs(energies - 0.0253))
+thermal_total = total_xs[thermal_idx]
+print(f"Thermal fission probability: {capture_xs[thermal_idx]/thermal_total:.1%}")
+```
+
+### Individual Channel Analysis
+```python
+# Access spin group details
+spin_group_0 = compound.getSpinGroup(0)  # J=1/2 group
+print(f"J={spin_group_0.getJ()}, Parity={spin_group_0.getPJ()}")
+print(f"Number of channels: {len(spin_group_0.channels())}")
+print(f"Number of resonances: {len(spin_group_0.getResonances())}")
+
+# Compare spin group contributions across energy range
+energies_thermal = np.logspace(-2, 1, 100)  # 0.01 to 10 eV
+j_half_elastic = [compound.spinGroupElasticCrossSection(0, E) for E in energies_thermal]
+j_3half_elastic = [compound.spinGroupElasticCrossSection(1, E) for E in energies_thermal]
+
+# Plot spin group interference
+import matplotlib.pyplot as plt
+plt.figure(figsize=(10, 6))
+plt.loglog(energies_thermal, j_half_elastic, label='J=1/2', linewidth=2)
+plt.loglog(energies_thermal, j_3half_elastic, label='J=3/2', linewidth=2)
+plt.xlabel('Energy (eV)')
+plt.ylabel('Elastic Cross Section (barns)')
+plt.title('Quantum Mechanical Spin Group Contributions')
+plt.legend()
+plt.grid(True, alpha=0.3)
+plt.show()
 ```
 
 ## 🎓 Physical Background
