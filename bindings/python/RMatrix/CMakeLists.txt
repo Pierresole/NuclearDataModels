@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.14)
 project(pyRMatrix LANGUAGES CXX)
 
-find_package(pybind11 REQUIRED)
+# find_package(pybind11 REQUIRED)
 
 # Create the Python module from your binding source (bindings.cpp)
 add_library(pyRMatrix MODULE bindings.cpp)
@@ -39,6 +39,7 @@ message(STATUS "Python site-packages error: ${PYTHON_SITE_PACKAGES_ERR}")
 message(STATUS "Python command result: ${PYTHON_RESULT}")
 
 # Install target to the site-packages directory
-install(TARGETS pyRMatrix 
+install(TARGETS pyRMatrix
         LIBRARY DESTINATION "${PYTHON_SITE_PACKAGES}"
-        COMPONENT python)
+        COMPONENT python
+        )

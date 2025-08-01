@@ -8,6 +8,7 @@
 #include "ParticlePair.h"
 #include "FormalismParameters.h"
 #include "Mlbw.h"  // Include the MLBW header
+#include "ParameterSensitivity.h"
 
 namespace py = pybind11;
 
@@ -361,7 +362,53 @@ PYBIND11_MODULE(pyRMatrix, m) {
         .def("channels", &SpinGroup::channels, py::return_value_policy::reference_internal)
         .def("getResonances", &SpinGroup::getResonances, py::return_value_policy::reference_internal)
         .def("getJ", &SpinGroup::getJ)
-        .def("getPJ", &SpinGroup::getPJ);
+        .def("getPJ", &SpinGroup::getPJ)
+        .def("crossSection", &SpinGroup::crossSection, py::arg("energy"), py::arg("entrance_particle_pair"))
+        .def("elasticCrossSection", &SpinGroup::elasticCrossSection, py::arg("energy"), py::arg("entrance_particle_pair"))
+        .def("captureCrossSection", &SpinGroup::captureCrossSection, py::arg("energy"), py::arg("entrance_particle_pair"))
+        .def("fissionCrossSection", &SpinGroup::fissionCrossSection, py::arg("energy"), py::arg("entrance_particle_pair"))
+        .def("totalCrossSection", &SpinGroup::totalCrossSection, py::arg("energy"), py::arg("entrance_particle_pair"))
+        // Overloaded methods for energy lists
+        .def("crossSection", [](const SpinGroup& self, const std::vector<double>& energies, const ParticlePair& pp) {
+            std::vector<double> results;
+            results.reserve(energies.size());
+            for (double E : energies) {
+                results.push_back(self.crossSection(E, pp));
+            }
+            return results;
+        }, py::arg("energies"), py::arg("entrance_particle_pair"))
+        .def("elasticCrossSection", [](const SpinGroup& self, const std::vector<double>& energies, const ParticlePair& pp) {
+            std::vector<double> results;
+            results.reserve(energies.size());
+            for (double E : energies) {
+                results.push_back(self.elasticCrossSection(E, pp));
+            }
+            return results;
+        }, py::arg("energies"), py::arg("entrance_particle_pair"))
+        .def("captureCrossSection", [](const SpinGroup& self, const std::vector<double>& energies, const ParticlePair& pp) {
+            std::vector<double> results;
+            results.reserve(energies.size());
+            for (double E : energies) {
+                results.push_back(self.captureCrossSection(E, pp));
+            }
+            return results;
+        }, py::arg("energies"), py::arg("entrance_particle_pair"))
+        .def("fissionCrossSection", [](const SpinGroup& self, const std::vector<double>& energies, const ParticlePair& pp) {
+            std::vector<double> results;
+            results.reserve(energies.size());
+            for (double E : energies) {
+                results.push_back(self.fissionCrossSection(E, pp));
+            }
+            return results;
+        }, py::arg("energies"), py::arg("entrance_particle_pair"))
+        .def("totalCrossSection", [](const SpinGroup& self, const std::vector<double>& energies, const ParticlePair& pp) {
+            std::vector<double> results;
+            results.reserve(energies.size());
+            for (double E : energies) {
+                results.push_back(self.totalCrossSection(E, pp));
+            }
+            return results;
+        }, py::arg("energies"), py::arg("entrance_particle_pair"));
 
     // Enhanced bindings for CompoundSystem with builder
     py::class_<CompoundSystem>(m, "CompoundSystem")
@@ -373,8 +420,92 @@ PYBIND11_MODULE(pyRMatrix, m) {
             auto spinGroupsView = self.spinGroups();
             return std::vector<SpinGroup>(spinGroupsView.begin(), spinGroupsView.end());
         }, "Retrieve spin groups as a Python-compatible list")
-        .def("crossSection", &CompoundSystem::crossSection, 
-            py::arg("energies"))
+        .def("crossSection", &CompoundSystem::crossSection, py::arg("energy"))
+        .def("elasticCrossSection", &CompoundSystem::elasticCrossSection, py::arg("energy"))
+        .def("captureCrossSection", &CompoundSystem::captureCrossSection, py::arg("energy"))
+        .def("fissionCrossSection", &CompoundSystem::fissionCrossSection, py::arg("energy"))
+        .def("totalCrossSection", &CompoundSystem::totalCrossSection, py::arg("energy"))
+        .def("spinGroupElasticCrossSection", &CompoundSystem::spinGroupElasticCrossSection, 
+             py::arg("spin_group_index"), py::arg("energy"))
+        .def("spinGroupCaptureCrossSection", &CompoundSystem::spinGroupCaptureCrossSection, 
+             py::arg("spin_group_index"), py::arg("energy"))
+        .def("spinGroupFissionCrossSection", &CompoundSystem::spinGroupFissionCrossSection, 
+             py::arg("spin_group_index"), py::arg("energy"))
+        .def("spinGroupTotalCrossSection", &CompoundSystem::spinGroupTotalCrossSection, 
+             py::arg("spin_group_index"), py::arg("energy"))
+        // Overloaded methods for energy lists
+        .def("crossSection", [](const CompoundSystem& self, const std::vector<double>& energies) {
+            std::vector<double> results;
+            results.reserve(energies.size());
+            for (double E : energies) {
+                results.push_back(self.crossSection(E));
+            }
+            return results;
+        }, py::arg("energies"))
+        .def("elasticCrossSection", [](const CompoundSystem& self, const std::vector<double>& energies) {
+            std::vector<double> results;
+            results.reserve(energies.size());
+            for (double E : energies) {
+                results.push_back(self.elasticCrossSection(E));
+            }
+            return results;
+        }, py::arg("energies"))
+        .def("captureCrossSection", [](const CompoundSystem& self, const std::vector<double>& energies) {
+            std::vector<double> results;
+            results.reserve(energies.size());
+            for (double E : energies) {
+                results.push_back(self.captureCrossSection(E));
+            }
+            return results;
+        }, py::arg("energies"))
+        .def("fissionCrossSection", [](const CompoundSystem& self, const std::vector<double>& energies) {
+            std::vector<double> results;
+            results.reserve(energies.size());
+            for (double E : energies) {
+                results.push_back(self.fissionCrossSection(E));
+            }
+            return results;
+        }, py::arg("energies"))
+        .def("totalCrossSection", [](const CompoundSystem& self, const std::vector<double>& energies) {
+            std::vector<double> results;
+            results.reserve(energies.size());
+            for (double E : energies) {
+                results.push_back(self.totalCrossSection(E));
+            }
+            return results;
+        }, py::arg("energies"))
+        .def("spinGroupElasticCrossSection", [](const CompoundSystem& self, size_t spinGroupIndex, const std::vector<double>& energies) {
+            std::vector<double> results;
+            results.reserve(energies.size());
+            for (double E : energies) {
+                results.push_back(self.spinGroupElasticCrossSection(spinGroupIndex, E));
+            }
+            return results;
+        }, py::arg("spin_group_index"), py::arg("energies"))
+        .def("spinGroupCaptureCrossSection", [](const CompoundSystem& self, size_t spinGroupIndex, const std::vector<double>& energies) {
+            std::vector<double> results;
+            results.reserve(energies.size());
+            for (double E : energies) {
+                results.push_back(self.spinGroupCaptureCrossSection(spinGroupIndex, E));
+            }
+            return results;
+        }, py::arg("spin_group_index"), py::arg("energies"))
+        .def("spinGroupFissionCrossSection", [](const CompoundSystem& self, size_t spinGroupIndex, const std::vector<double>& energies) {
+            std::vector<double> results;
+            results.reserve(energies.size());
+            for (double E : energies) {
+                results.push_back(self.spinGroupFissionCrossSection(spinGroupIndex, E));
+            }
+            return results;
+        }, py::arg("spin_group_index"), py::arg("energies"))
+        .def("spinGroupTotalCrossSection", [](const CompoundSystem& self, size_t spinGroupIndex, const std::vector<double>& energies) {
+            std::vector<double> results;
+            results.reserve(energies.size());
+            for (double E : energies) {
+                results.push_back(self.spinGroupTotalCrossSection(spinGroupIndex, E));
+            }
+            return results;
+        }, py::arg("spin_group_index"), py::arg("energies"))
         .def("entranceParticlePair", &CompoundSystem::entranceParticlePair)
         .def("getSpinGroup", &CompoundSystem::getSpinGroup, py::return_value_policy::reference_internal);
 
@@ -391,5 +522,42 @@ PYBIND11_MODULE(pyRMatrix, m) {
         .def_static("from_dict", &CompoundSystemBuilder::fromDict, 
                     py::arg("data"));
     
-    // ...existing code...
+    // Bindings for ParameterInfo
+    py::class_<ParameterInfo>(m, "ParameterInfo")
+        .def_readwrite("type", &ParameterInfo::type)
+        .def_readwrite("spinGroupIndex", &ParameterInfo::spinGroupIndex)
+        .def_readwrite("resonanceIndex", &ParameterInfo::resonanceIndex)
+        .def_readwrite("channelIndex", &ParameterInfo::channelIndex)
+        .def_readwrite("particlePairIndex", &ParameterInfo::particlePairIndex)
+        .def_readwrite("description", &ParameterInfo::description)
+        .def_readwrite("nominalValue", &ParameterInfo::nominalValue);
+    
+    // Enum for ParameterInfo::Type
+    py::enum_<ParameterInfo::Type>(m, "ParameterType")
+        .value("RESONANCE_ENERGY", ParameterInfo::Type::RESONANCE_ENERGY)
+        .value("RESONANCE_GAMMA", ParameterInfo::Type::RESONANCE_GAMMA)
+        .value("CHANNEL_RADIUS", ParameterInfo::Type::CHANNEL_RADIUS)
+        .value("PARTICLE_MASS", ParameterInfo::Type::PARTICLE_MASS)
+        .value("PARTICLE_SPIN", ParameterInfo::Type::PARTICLE_SPIN);
+    
+    // Bindings for ParameterSensitivity
+    py::class_<ParameterSensitivity>(m, "ParameterSensitivity")
+        .def(py::init<const CompoundSystem&, double>(), 
+             py::arg("system"), py::arg("perturbation") = 1e-6)
+        .def("extractParameters", &ParameterSensitivity::extractParameters)
+        .def("computeDerivative", &ParameterSensitivity::computeDerivative,
+             py::arg("parameter_index"), py::arg("energy"), py::arg("cross_section_func"), py::arg("perturbation") = -1.0)
+        .def("totalCrossSectionDerivatives", &ParameterSensitivity::totalCrossSectionDerivatives,
+             py::arg("energy"), py::arg("perturbation") = -1.0)
+        .def("elasticCrossSectionDerivatives", &ParameterSensitivity::elasticCrossSectionDerivatives,
+             py::arg("energy"), py::arg("perturbation") = -1.0)
+        .def("captureCrossSectionDerivatives", &ParameterSensitivity::captureCrossSectionDerivatives,
+             py::arg("energy"), py::arg("perturbation") = -1.0)
+        .def("fissionCrossSectionDerivatives", &ParameterSensitivity::fissionCrossSectionDerivatives,
+             py::arg("energy"), py::arg("perturbation") = -1.0)
+        .def("getParameters", &ParameterSensitivity::getParameters, py::return_value_policy::reference_internal)
+        .def("getParameterCount", &ParameterSensitivity::getParameterCount)
+        .def("printParameterInfo", &ParameterSensitivity::printParameterInfo)
+        .def("computeSensitivityMatrix", &ParameterSensitivity::computeSensitivityMatrix,
+             py::arg("energies"), py::arg("cross_section_types") = std::vector<std::string>{"total", "elastic", "capture", "fission"});
 }
