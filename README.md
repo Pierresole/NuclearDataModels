@@ -9,14 +9,14 @@
 
 ## 🎯 Showcase: Intuitive Nuclear Physics API
 
-Experience the elegance of our C++ bindings - nuclear physics calculations become as simple as calling methods:
+Experience the simplicity of C++ bindings - nuclear physics calculations become as simple as calling methods:
 
 ```python
 import numpy as np
 import matplotlib.pyplot as plt
 from scripts.compoundFromENDFtk import create_compound_from_ReichMoore
 
-# Load nuclear data with one line
+# Eval uses RM resonance formalism but we convert it to RML formalism
 compound_system = create_compound_from_ReichMoore('Pu-239.endf')
 
 # Inspect the nuclear structure
@@ -24,18 +24,31 @@ compound_system.printSpinGroupInfo()
 # → Spin Group 0/2 (0.5, 1): has 3 channels.
 # → Spin Group 1/2 (1.5, 1): has 3 channels.
 
-# Calculate cross sections at any energy
-thermal_energy = 0.0253  # eV
-print(f"At thermal energy ({thermal_energy} eV):")
-print(f"  Elastic:  {compound_system.elasticCrossSection(thermal_energy):.1f} barns")
-print(f"  Capture:  {compound_system.captureCrossSection(thermal_energy):.1f} barns") 
-print(f"  Fission:  {compound_system.fissionCrossSection(thermal_energy):.1f} barns")
-print(f"  Total:    {compound_system.totalCrossSection(thermal_energy):.1f} barns")
+energies = np.logspace(-2, 2, 1000)     # 0.01 to 100 eV
+
+elastic_xs = [compound_system.elasticCrossSection(E) for E in energies]
+capture_xs = [compound_system.captureCrossSection(E) for E in energies]
+fission_xs = [compound_system.fissionCrossSection(E) for E in energies]
+total_xs = [compound_system.totalCrossSection(E) for E in energies]
+
+plt.loglog(energies, elastic_xs, label='(n,n)', color=colors[0], linewidth=3)
+plt.loglog(energies, capture_xs, label=r'(n,\gamma)', color=colors[1], linewidth=3)
+plt.loglog(energies, fission_xs, label='(n,f)', color=colors[2], linewidth=3)
+plt.loglog(energies, total_xs, label='(n,tot)', color='black', linewidth=4, linestyle='--', alpha=0.8)
+
+plt.set_xlabel('Energy (eV)', fontsize=16)
+plt.set_ylabel('Cross Section (barns)', fontsize=16)
+plt.set_title(f'Nuclear Cross Sections by Reaction Type', fontsize=18, pad=20)
+plt.legend(fontsize=14, loc='upper right')
+plt.grid(True, alpha=0.3)
+
+plt.tight_layout()
+
 ```
 
 ![Nuclear Reactions](images/nuclear_reactions_demo.png)
 
-*Multiple nuclear reaction types calculated with simple, intuitive method calls on the compound system object.*
+*Multiple nuclear reaction types calculated with simple calls on the compound system object.*
 
 ```python
 # Individual spin group contributions (J-π physics!)
@@ -62,7 +75,7 @@ plt.show()
 
 ![Spin Groups](images/spin_groups_demo.png)
 
-*Quantum mechanical spin group decomposition showing individual J-π contributions to elastic scattering.*
+*Easy spin group decomposition showing individual $J^\pi$ contributions to elastic scattering.*
 
 ## ✨ Key Features
 
@@ -95,11 +108,6 @@ graph TB
     CALC[CrossSectionCalculator]:::support
     SENS[ParameterSensitivity]:::support
     
-    %% Data Structures
-    FP[FormalismParameters]:::data
-    MLBW[MLBWParameters]:::data
-    RM[RMatrixParameters]:::data
-    
     %% Relationships
     CS --> SG
     SG --> CH
@@ -108,10 +116,6 @@ graph TB
     CH --> RWF
     CS --> CALC
     CS --> SENS
-    
-    FP --> MLBW
-    FP --> RM
-    MLBW --> SG
     
     %% Styling
     classDef main fill:#e1f5fe,stroke:#01579b,stroke-width:3px,color:#000
@@ -328,104 +332,22 @@ Explore the full capabilities with our comprehensive notebook examples:
 - 📉 **Sensitivity Matrices**: Complete parameter correlation analysis
 - 🎚️ **Perturbation Studies**: Understanding parameter impact on observables
 
-#### Key Notebook Features:
-```python
-# One-liner nuclear data analysis
-compound_system = create_compound_from_ReichMoore('Pu-239.endf')
-plot_elastic_comparison(compound_system)  # → Beautiful publication plot!
-
-# Advanced spin group breakdown  
-plot_spin_group_breakdown(compound_system, 'fission')
-
-# Parameter sensitivity heatmaps
-sensitivity.computeMultigroupSensitivityMatrix(energy_groups)
-```
-
-### 🔄 Multi-format Input Support
-
-```python
-# Reich-Moore format (LRF=3)
-compound_rm = create_compound_from_ReichMoore('plutonium.endf')
-
-# R-Matrix Limited format (LRF=7) 
-compound_rml = create_compound_from_RMatrix('copper.endf')
-
-# MLBW format support
-wrapper = pyRMatrix.FormalismParametersWrapper()
-wrapper.fill(endf_data_dict)
-mlbw = pyRMatrix.MLBW(wrapper.data.parameters.mlbw)
-```
-
-### 📈 Publication-Ready Plotting
-
-While the compound system API provides direct access to all physics calculations, we also include convenient plotting utilities for quick visualization:
-
-```python
-from scripts.plot_cross_sections import *
-
-# Individual spin group contributions
-plot_spin_group_breakdown(compound, 'elastic')
-
-# Compare all reaction types
-plot_all_reactions(compound)
-
-# Customizable energy ranges and styling
-plot_elastic_comparison(compound, energy_range=(-3, 3), save_path='figure.png')
-
-# But remember - you can always build custom plots using the direct API:
-energies = np.logspace(-2, 2, 1000)
-elastic_xs = [compound.elasticCrossSection(E) for E in energies]
-plt.loglog(energies, elastic_xs, label='Custom Plot')
-```
-
 ## 🧪 Example Calculations
 
 ### Resonance Analysis & Spin Group Physics
 ```python
 # Examine nuclear structure
 compound.printSpinGroupInfo()
-# → Spin Group 0/2 (0.5, 1): has 3 channels.
-# → Spin Group 1/2 (1.5, 1): has 3 channels.
+# -> Spin Group 0/2 (0.5, 1): has 3 channels.
+# -> Spin Group 1/2 (1.5, 1): has 3 channels.
 
 # Calculate at thermal and resonance energies
 thermal_energy = 0.0253   # eV (room temperature)
-resonance_energy = 0.296  # eV (Pu-239 major resonance)
 
 print("At thermal energy:")
 print(f"  Total: {compound.totalCrossSection(thermal_energy):.0f} barns")
 print(f"  J=1/2: {compound.spinGroupTotalCrossSection(0, thermal_energy):.0f} barns")
 print(f"  J=3/2: {compound.spinGroupTotalCrossSection(1, thermal_energy):.0f} barns")
-
-print(f"\nAt resonance ({resonance_energy} eV):")
-print(f"  Total: {compound.totalCrossSection(resonance_energy):.0f} barns")
-print(f"  Elastic: {compound.elasticCrossSection(resonance_energy):.0f} barns")
-print(f"  Fission: {compound.fissionCrossSection(resonance_energy):.0f} barns")
-```
-
-### Energy-dependent Cross Sections & Peak Finding
-```python
-import numpy as np
-
-# Thermal to fast neutron range
-energies = np.logspace(-3, 6, 1000)  # 1 meV to 1 MeV
-
-# Vectorized calculations using our elegant API
-total_xs = [compound.totalCrossSection(E) for E in energies]
-elastic_xs = [compound.elasticCrossSection(E) for E in energies]
-capture_xs = [compound.captureCrossSection(E) for E in energies]
-
-# Physics analysis
-peaks = np.where(np.array(total_xs) > 1000)[0]
-max_xs = max(total_xs)
-max_energy = energies[np.argmax(total_xs)]
-
-print(f"Found {len(peaks)} resonance peaks above 1000 barns")
-print(f"Maximum cross section: {max_xs:.0f} barns at {max_energy:.3f} eV")
-
-# Reaction branching ratios
-thermal_idx = np.argmin(np.abs(energies - 0.0253))
-thermal_total = total_xs[thermal_idx]
-print(f"Thermal fission probability: {capture_xs[thermal_idx]/thermal_total:.1%}")
 ```
 
 ### Individual Channel Analysis
@@ -454,19 +376,10 @@ plt.grid(True, alpha=0.3)
 plt.show()
 ```
 
-## 🎓 Physical Background
-
-This library implements modern nuclear data evaluation methods based on:
-
-- **R-Matrix Theory**: Describes nuclear reactions through scattering matrix formalism
-- **Multi-Level Breit-Wigner (MLBW)**: Resonance parameterization for isolated resonances  
-- **Reich-Moore**: Advanced formalism handling overlapping resonances
-- **Radial Wave Functions**: Quantum mechanical boundary conditions at nuclear surface
-
 ### Key References
 - 📖 **SAMMY Manual** - Oak Ridge National Laboratory
 - 📖 **G. Ferran's Thesis** - Advanced R-Matrix implementations
-- 📖 **JEFF Report 18** - European nuclear data evaluation guidelines
+- 📖 **JEFF Report 18** - JEFDOC Nuclear data evaluation guidelines
 - 📖 **ENDF Manual** - International nuclear data format standards
 - 📖 **Neutron Interaction Theory** - A. Foderaro
 
@@ -510,7 +423,7 @@ This project is licensed under the [LICENSE](LICENSE) - see the file for details
 
 ## 🙏 Acknowledgments
 
-Built upon decades of nuclear physics research and computational methods development. Special thanks to the nuclear data evaluation communities at ORNL, CEA, and IAEA for their foundational work in R-Matrix theory and implementation.
+Built upon decades of nuclear physics research and computational methods development.
 
 ---
 
