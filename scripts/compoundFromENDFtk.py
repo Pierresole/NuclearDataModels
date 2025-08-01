@@ -187,7 +187,7 @@ def create_compound_from_ReichMoore(tape_string):
                 'L': lvalue.L,
                 'APL': lvalue.APL,
                 'ChannelSpin': ChannelSpin,
-                'widths': [GN, GFA, GFB, GG]
+                'widths': [GG, GN, GFA, GFB]
             })
 
     # Step 2: Build spin groups
@@ -197,8 +197,8 @@ def create_compound_from_ReichMoore(tape_string):
         # Add 4 channels (using the first resonance's L/APL/ChannelSpin as example)
         chs = []
         for pp, pp_obj in zip(
-            [entrance_pp, fission1_pp, fission2_pp, capture_pp],
-            ['entrance', 'fission1', 'fission2', 'capture']
+            [capture_pp, entrance_pp, fission1_pp, fission2_pp],
+            ['capture', 'entrance', 'fission1', 'fission2']
         ):
             ch = pyRMatrix.Channel(
                 particle_pair=pp,

@@ -3,6 +3,7 @@
 
 #include <stdexcept>
 #include <tuple>
+#include <ranges>
 
 #include "ParticlePair.h"
 #include "RadialWaveFunctions.h"

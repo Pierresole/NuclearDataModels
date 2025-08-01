@@ -7,6 +7,8 @@
 #include <vector>
 #include <memory>
 #include <iostream>
+#include <ranges>
+using namespace std::views;
 
 class Resonance {
 private:
@@ -270,37 +272,358 @@ public:
     // Loop on channels of this spingroup
     // See p.30 SAMMY UG7
     // Using U or the X matrix yields the same results
-    double crossSection(double E, const ParticlePair& entrancePP) const {
+    // Note 06/25 : Total is Okay but other reactions are not
+    double crossSectionViaU(double E, const ParticlePair& entrancePP) const {
         double sigma = 0.0;
         int nChannels = channels_.size();
-        double factor = (2*M_PI/(entrancePP.k2(E, entrancePP)));
+        
+        // Get spins of particles A and B from entrance particle pair
+        double ia = entrancePP.spin1();
+        double ib = entrancePP.spin2();
+        
+        // Calculate spin factor: gJ = (2*J+1) / [(2*ia+1)*(2*ib+1)]
+        double gJ = (2.0 * J_ + 1.0) / ((2.0 * ia + 1.0) * (2.0 * ib + 1.0));
+        
+        double factor = (4*M_PI/(entrancePP.k2(E, entrancePP))) * gJ;
+        std::cout << "gJ=" << gJ << std::endl;
 
         Eigen::MatrixXcd U = computeCollisionMatrix(E, entrancePP);
-        for (int c = 0; c < nChannels; ++c) {
-            double partialSigmaJ = factor * (1. - U(c,c).real());
-            sigma += partialSigmaJ;
-        }
-        return sigma;
+        double TotalU = 0.0;
+        
+        auto incidents = channels_ | enumerate | filter([&entrancePP](const auto& enumChannel) {
+            return std::get<1>(enumChannel).getParticlePair() == entrancePP;
+        });
 
-        // std::vector<Channel::ChannelQuantities> channelQuantities;
-        // channelQuantities.reserve(nChannels);
-        // // First calculate all channel quantities and store them
-        // for (int c = 0; c < nChannels; ++c) {
-        //     channelQuantities.push_back(channels_[c].computeChannelQuantities(E, entrancePP));
-        // }
-        // auto X = computeXMatrix(E, channelQuantities);
-        // for (int c = 0; c < nChannels - 1; ++c) {
-        //     // Sum on channels where alpha' is alpha
-        //     if(channels_[c].getParticlePair().MT() != 2) continue;
-        //     const auto& cQuant = channelQuantities[c];
-        //     double partialSigmaJ = 2 * factor * (std::pow(std::sin(cQuant.phi),2) 
-        //                                         + X(c,c).imag()*std::cos(2 * cQuant.phi)
-        //                                         - X(c,c).real()*std::sin(2 * cQuant.phi));
-        //     sigma += partialSigmaJ;
-        // }
-        // return sigma;
+        for (const auto& [c, channel] : incidents) {
+            TotalU += 0.5 * (1. - U(c,c).real());
+        }
+        std::cout << "TotalU " << factor * TotalU << std::endl;
+
+        double xsfission = 0.0;
+        auto fission = channels_ | enumerate | filter([](const auto& enumChannel) {
+            return std::get<1>(enumChannel).getParticlePair().MT() == 18;
+        });
+        for (const auto& [c, channel] : incidents) {
+            for (const auto& [cfiss, channelfiss] : fission) {
+                double temp = std::pow( std::norm(U(c,cfiss)), 2);
+                xsfission += temp;
+                std::cout << "c=" << c << " cfiss=" << cfiss << " U(c,cfiss)=" << U(c,cfiss) 
+                          << " temp=" << temp << " xsfission=" << xsfission << std::endl;
+            }
+        }
+        std::cout << "fission xs=" << factor * xsfission << std::endl;
+
+        double xselast = 0.0;
+        for (const auto& [c, channel] : incidents) {
+            for (const auto& [cp, channelp] : incidents) {
+                // xselast += std::pow( std::norm( std::complex<double>(1.0, 0.0) - U(c,cp)), 2);
+                xselast += 1 - 2 * U(c,cp).real() + std::pow( std::norm(U(c,cp)), 2);
+            }
+        }
+        std::cout << "elast xs=" << factor * xselast << std::endl;
+
+        double xscapture = 0.0;
+        for (const auto& [c, channel] : incidents) {
+            // For capture reactions, sum over all channels except capture channels
+            std::cout << "c=" << c << " channel MT=" << channel.getParticlePair().MT() << std::endl;
+            xscapture += 1;
+            for (auto [cp, channelp] : channels_ | enumerate) {
+                if (channelp.getParticlePair().MT() != 102) {
+                    std::cout << "cp=" << cp << " channelp MT=" << channelp.getParticlePair().MT() << std::endl;
+                    xscapture -= std::pow( std::norm( U(c,cp)), 2 );
+                }
+            }
+        }
+        std::cout << "capture xs=" << factor * xscapture << std::endl;
+
+        return 0;
     }
 
+    void partialCrossSection(double E, const ParticlePair& entrancePP, int iMT) const {
+        double sigma = 0.0;
+        int nChannels = channels_.size();
+        
+        // Get spins of particles A and B from entrance particle pair
+        double ia = entrancePP.spin1();
+        double ib = entrancePP.spin2();
+        
+        // Calculate spin factor: gJ = (2*J+1) / [(2*ia+1)*(2*ib+1)]
+        double factor = (2.0 * J_ + 1.0) / ((2.0 * ia + 1.0) * (2.0 * ib + 1.0)) * (2*M_PI/(entrancePP.k2(E, entrancePP)));
+
+        std::vector<Channel::ChannelQuantities> channelQuantities;
+        channelQuantities.reserve(nChannels);
+        // First calculate all channel quantities and store them
+        for (int c = 0; c < nChannels; ++c) {
+            channelQuantities.push_back(channels_[c].computeChannelQuantities(E, entrancePP));
+        }
+
+        auto incidents = channels_ | enumerate | filter([&entrancePP](const auto& enumChannel) {
+            return std::get<1>(enumChannel).getParticlePair() == entrancePP;
+        });
+
+        auto X = computeXMatrix(E, channelQuantities);
+
+        double partial = 0.0;
+        for (auto [c, channel] : channels_ | enumerate) {
+            auto reactions = channels_ | enumerate | filter([&iMT](const auto& enumChannel) {return std::get<1>(enumChannel).getParticlePair().MT() == iMT;});
+            for (const auto& [cp, channelp] : reactions) {
+                partial += std::pow(X(c,cp).real(), 2) + std::pow(X(c,cp).imag(), 2);
+            }
+        }
+
+        partial *= 2 * factor;
+        std::cout << "Partial cross section for MT=" << iMT << ": " << partial << std::endl;
+    }
+
+    double crossSection(double E, const ParticlePair& entrancePP) const {
+        return totalCrossSection(E, entrancePP);
+    }
+
+    // Elastic cross section calculation
+    double elasticCrossSection(double E, const ParticlePair& entrancePP) const {
+        double xs_elastic = 0.0;
+        int nChannels = channels_.size();
+        
+        // Get spins of particles A and B from entrance particle pair
+        double ia = entrancePP.spin1();
+        double ib = entrancePP.spin2();
+        
+        // Calculate spin factor: gJ = (2*J+1) / [(2*ia+1)*(2*ib+1)]
+        double gJ = (2.0 * J_ + 1.0) / ((2.0 * ia + 1.0) * (2.0 * ib + 1.0));
+        
+        double Pik2 = (4*M_PI/(entrancePP.k2(E, entrancePP)));
+        double factor = Pik2 * gJ;
+        
+        std::vector<Channel::ChannelQuantities> channelQuantities;
+        channelQuantities.reserve(nChannels);
+        // First calculate all channel quantities and store them
+        for (int c = 0; c < nChannels; ++c) {
+            channelQuantities.push_back(channels_[c].computeChannelQuantities(E, entrancePP));
+        }
+        auto X = computeXMatrix(E, channelQuantities);
+        
+        // Refactored elastic cross section computation using ranges
+        // auto elastic_channels = channels_ | std::views::enumerate | std::views::filter([](const auto& enumChannel) {
+        //     return std::get<1>(enumChannel).getParticlePair().MT() == 2;
+        // });
+        
+        // for (const auto& [c, channel] : elastic_channels) {
+        //     const auto& cQuant = channelQuantities[c];
+        //     double sumX2 = 0.0;
+        //     // Find all channels with the same particle pair as this elastic channel
+        //     auto matchingChannels = channels_
+        //         | std::views::enumerate
+        //         | std::views::filter([&channel](const auto& enumChannel) {
+        //             return std::get<1>(enumChannel).getParticlePair() == channel.getParticlePair();
+        //         });
+        //     for (const auto& [cp, channelp] : matchingChannels) {
+        //         sumX2 += std::pow(X(c, cp).imag(), 2) + std::pow(X(c, cp).real(), 2);
+        //     }
+        //     double partialSigmaJ = factor * (std::pow(std::sin(cQuant.phi),2) * (1 - 2 * X(c,c).imag())
+        //                         - X(c,c).real()*std::sin(2 * cQuant.phi)
+        //                         + sumX2);
+        //     sigma_elastic += partialSigmaJ;
+        // }
+
+        // Loop on retained channels (non capture)
+        auto retained = channels_ | enumerate | filter([&entrancePP](const auto& enumChannel) {return std::get<1>(enumChannel).getParticlePair() == entrancePP;});
+        auto incidents = channels_ | enumerate | filter([&entrancePP](const auto& enumChannel) {return std::get<1>(enumChannel).getParticlePair() == entrancePP;});
+        for (const auto& [c, channel] : retained) {
+            // Sum on channels where alpha' is alpha
+            const auto& cQuant = channelQuantities[c];  
+            double sumX2 = 0.0;
+            for (const auto& [cp, channel] : incidents) {
+                sumX2 += std::pow(X(c, cp).imag(), 2) + std::pow(X(c, cp).real(), 2);
+            }
+
+            xs_elastic += factor * (std::pow(std::sin(cQuant.phi),2) 
+                            * (1 - 2 * X(c,c).imag()) 
+                            - X(c,c).real()*std::sin(2 * cQuant.phi)
+                            + sumX2);
+        }
+        return xs_elastic;
+    }
+    
+    // Capture cross section calculation (MT=102)
+    double captureCrossSection(double E, const ParticlePair& entrancePP) const {
+        double xs_capture = 0.0;
+        int nChannels = channels_.size();
+        
+        // Get spins of particles A and B from entrance particle pair
+        double ia = entrancePP.spin1();
+        double ib = entrancePP.spin2();
+        
+        // Calculate spin factor: gJ = (2*J+1) / [(2*ia+1)*(2*ib+1)]
+        double gJ = (2.0 * J_ + 1.0) / ((2.0 * ia + 1.0) * (2.0 * ib + 1.0));
+        
+        double Pik2 = (4*M_PI/(entrancePP.k2(E, entrancePP)));
+        double factor = Pik2 * gJ;
+        
+        std::vector<Channel::ChannelQuantities> channelQuantities;
+        channelQuantities.reserve(nChannels);
+        // First calculate all channel quantities and store them
+        for (int c = 0; c < nChannels; ++c) {
+            channelQuantities.push_back(channels_[c].computeChannelQuantities(E, entrancePP));
+        }
+        auto X = computeXMatrix(E, channelQuantities);
+        
+        // Filter capture channels (MT=102)
+        // auto capture_channels = channels_ | std::views::enumerate | std::views::filter([](const auto& enumChannel) {
+        //     return std::get<1>(enumChannel).getParticlePair().MT() == 102;
+        // });
+        
+        // for (const auto& [c, channel] : capture_channels) {
+        //     // For (n,g) reactions - sum over all channels
+        //     double sumX2 = 0.0;
+        //     for (int cp = 0; cp < nChannels; ++cp) {
+        //         sumX2 += std::pow(X(c, cp).imag(), 2) + std::pow(X(c, cp).real(), 2);
+        //     }
+        //     double partialSigmaJ = factor * sumX2;
+        //     sigma_capture += partialSigmaJ;
+        // }
+        // return sigma_capture;
+
+        auto incidents = channels_ | enumerate | filter([&entrancePP](const auto& enumChannel) {
+            return std::get<1>(enumChannel).getParticlePair() == entrancePP;
+        });
+
+        for (const auto& [c, channel] : incidents) {
+            double sumX2_capt = 0.0;
+            for (int cp = 0; cp < nChannels; ++cp) {
+                sumX2_capt += std::pow(X(c, cp).imag(), 2) + std::pow(X(c, cp).real(), 2);
+            }
+            xs_capture += factor * (X(c,c).imag() - sumX2_capt);
+        }
+        return xs_capture;
+    }
+
+    // Fission cross section calculation (MT=18)
+    double fissionCrossSection(double E, const ParticlePair& entrancePP) const {
+        double xs_fission = 0.0;
+        int nChannels = channels_.size();
+        
+        // Get spins of particles A and B from entrance particle pair
+        double ia = entrancePP.spin1();
+        double ib = entrancePP.spin2();
+        
+        // Calculate spin factor: gJ = (2*J+1) / [(2*ia+1)*(2*ib+1)]
+        double gJ = (2.0 * J_ + 1.0) / ((2.0 * ia + 1.0) * (2.0 * ib + 1.0));
+        
+        double Pik2 = (4*M_PI/(entrancePP.k2(E, entrancePP)));
+        double factor = Pik2 * gJ;
+        
+        std::vector<Channel::ChannelQuantities> channelQuantities;
+        channelQuantities.reserve(nChannels);
+        // First calculate all channel quantities and store them
+        for (int c = 0; c < nChannels; ++c) {
+            channelQuantities.push_back(channels_[c].computeChannelQuantities(E, entrancePP));
+        }
+        auto X = computeXMatrix(E, channelQuantities);
+
+        auto incidents = channels_ | enumerate | filter([&entrancePP](const auto& enumChannel) {
+            return std::get<1>(enumChannel).getParticlePair() == entrancePP;
+        });
+        
+        // Filter fission channels (MT=18)
+        auto fission_channels = channels_ | std::views::enumerate | std::views::filter([](const auto& enumChannel) {
+            return std::get<1>(enumChannel).getParticlePair().MT() == 18;
+        });
+
+        // auto fission = channels_ | enumerate | filter([](const auto& enumChannel) {return std::get<1>(enumChannel).getParticlePair().MT() == 18;});
+        for (const auto& [c, channel] : incidents) {
+            for (const auto& [cp, channelfiss] : fission_channels) {
+                xs_fission += factor * (std::pow(X(c,cp).imag(),2) + std::pow(X(c,cp).real(),2) );
+            }
+        }
+        return xs_fission;
+    }
+    
+    // Total cross section calculation
+    double totalCrossSection(double E, const ParticlePair& entrancePP) const {
+        return elasticCrossSection(E, entrancePP) + captureCrossSection(E, entrancePP) + fissionCrossSection(E, entrancePP);
+    }
+
+    // double crossSection(double E, const ParticlePair& entrancePP) const {
+
+    //     double sigma = 0.0;
+    //     int nChannels = channels_.size();
+        
+    //     // Get spins of particles A and B from entrance particle pair
+    //     double ia = entrancePP.spin1();
+    //     double ib = entrancePP.spin2();
+        
+    //     // Calculate spin factor: gJ = (2*J+1) / [(2*ia+1)*(2*ib+1)]
+    //     double gJ = (2.0 * J_ + 1.0) / ((2.0 * ia + 1.0) * (2.0 * ib + 1.0));
+    //     double factor = (4*M_PI/(entrancePP.k2(E, entrancePP))) * gJ;
+
+    //     std::vector<Channel::ChannelQuantities> channelQuantities;
+    //     channelQuantities.reserve(nChannels);
+    //     // First calculate all channel quantities and store them
+    //     for (int c = 0; c < nChannels; ++c) {
+    //         channelQuantities.push_back(channels_[c].computeChannelQuantities(E, entrancePP));
+    //     }
+    //     auto X = computeXMatrix(E, channelQuantities);
+
+    //     double totalX = 0.0;
+        
+    //     auto incidents = channels_ | enumerate | filter([&entrancePP](const auto& enumChannel) {
+    //             return std::get<1>(enumChannel).getParticlePair() == entrancePP;
+    //         });
+
+    //     for (auto [c, channel] : incidents) {
+    //         // Sum on channels where alpha' is alpha
+    //         const auto& cQuant = channelQuantities[c];
+    //         double temp = (std::pow(std::sin(cQuant.phi),2) 
+    //             + std::cos(2 * cQuant.phi) * X(c,c).imag()
+    //             - std::sin(2 * cQuant.phi) * X(c,c).real());
+
+    //         totalX += factor * temp;
+    //     }
+    //     std::cout << "TotalX = " << totalX << std::endl;
+
+        
+    //     // Loop on retained channels (non capture)
+    //     double xselast = 0.0;
+    //     auto retained = channels_ | enumerate | filter([&entrancePP](const auto& enumChannel) {return std::get<1>(enumChannel).getParticlePair() == entrancePP;});
+    //     for (const auto& [c, channel] : retained) {
+    //         // Sum on channels where alpha' is alpha
+    //         const auto& cQuant = channelQuantities[c];  
+    //         double sumX2 = 0.0;
+    //         for (const auto& [cp, channel] : incidents) {
+    //             sumX2 += std::pow(X(c, cp).imag(), 2) + std::pow(X(c, cp).real(), 2);
+    //         }
+
+    //         xselast += factor * (std::pow(std::sin(cQuant.phi),2) 
+    //                         * (1 - 2 * X(c,c).imag()) 
+    //                         - X(c,c).real()*std::sin(2 * cQuant.phi)
+    //                         + sumX2);
+    //     }
+    //     std::cout << "Elastic xs=" << xselast << std::endl;
+
+    //     //////////////////////// For (n,g) reactions - sum over all channels
+    //     double xscapture = 0.0;
+    //     for (const auto& [c, channel] : incidents) {
+    //         double sumX2_capt = 0.0;
+    //         for (int cp = 0; cp < nChannels; ++cp) {
+    //             sumX2_capt += std::pow(X(c, cp).imag(), 2) + std::pow(X(c, cp).real(), 2);
+    //         }
+    //         xscapture += factor * (X(c,c).imag() - sumX2_capt);
+    //     }
+    //     std::cout << "Capture xs=" << xscapture << std::endl;
+
+    //     ////////////// FISSION
+    //     double xsfission = 0.0;
+    //     auto fission = channels_ | enumerate | filter([](const auto& enumChannel) {return std::get<1>(enumChannel).getParticlePair().MT() == 18;});
+    //     for (const auto& [c, channel] : incidents) {
+    //         for (const auto& [cp, channelfiss] : fission) {
+    //             xsfission += factor * (std::pow(X(c,cp).imag(),2) + std::pow(X(c,cp).real(),2) );
+    //         }
+    //     }
+    //     std::cout << "fission xs=" << xsfission << std::endl;
+        
+    //     return sigma;
+    // }
+    
     Eigen::MatrixXcd computeCollisionMatrix(double E, const ParticlePair& entrancePP) const {
         int nChannels = channels_.size();
         Eigen::MatrixXcd Collision(nChannels,nChannels);
@@ -448,7 +771,7 @@ public:
         }
     }
 
-    Eigen::MatrixXd FillReichMooreRMatrix(const SpinGroup& spinGroup, Eigen::MatrixXcd& R, double E) {
+    void FillReichMooreRMatrix(const SpinGroup& spinGroup, Eigen::MatrixXcd& R, double E) {
         const auto& resonances = spinGroup.getResonances();
         const auto& channels = spinGroup.channels();
         size_t numChannels = channels.size();
@@ -464,6 +787,31 @@ public:
                 }
                 R(c, cp) = sum;
             }
+        }
+    }
+
+private:
+    // Helper method to convert MT value to reaction string
+    std::string getReactionString(int MT) const {
+        switch(MT) {
+            case 1: return "(n,t)"; // total
+            case 2: return "(n,n)";      // Elastic scattering
+            case 18: return "(n,f)";     // Fission
+            case 19: return "(n,f)";     // First-chance fission
+            case 20: return "(n,f)";     // Second-chance fission
+            case 21: return "(n,f)";     // Third-chance fission
+            case 38: return "(n,f)";     // Fourth-chance fission
+            case 51: return "(n,n1)";    // Inelastic to 1st excited state
+            case 52: return "(n,n2)";    // Inelastic to 2nd excited state
+            case 53: return "(n,n3)";    // Inelastic to 3rd excited state
+            case 102: return "(n,g)";    // Radiative capture
+            case 103: return "(n,p)";    // Proton production
+            case 104: return "(n,d)";    // Deuteron production
+            case 105: return "(n,t)";    // Triton production
+            case 106: return "(n,3He)";  // 3He production
+            case 107: return "(n,a)";    // Alpha production
+            case 108: return "(n,2a)";   // 2 Alpha production
+            default: return "(n,?)";     // Unknown reaction
         }
     }
 };

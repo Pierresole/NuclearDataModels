@@ -52,11 +52,78 @@ public:
     double crossSection(double E) const {
         double sigma_total = 0.0;
         for (const auto& sg : spinGroups_) {
-            sigma_total += (2 * sg.getJ() + 1) / 
-                        ((2 * entranceParticlePair_.spin1() + 1)*(2 * entranceParticlePair_.spin2() + 1)) * 
-                        sg.crossSection(E, entranceParticlePair_);
+            sigma_total += sg.crossSection(E, entranceParticlePair_);
         }
         return sigma_total;
+    }
+    
+    // Elastic cross section summed over all spin groups
+    double elasticCrossSection(double E) const {
+        double sigma_elastic = 0.0;
+        for (const auto& sg : spinGroups_) {
+            sigma_elastic += sg.elasticCrossSection(E, entranceParticlePair_);
+        }
+        return sigma_elastic;
+    }
+    
+    // Capture cross section summed over all spin groups
+    double captureCrossSection(double E) const {
+        double sigma_capture = 0.0;
+        for (const auto& sg : spinGroups_) {
+            sigma_capture += sg.captureCrossSection(E, entranceParticlePair_);
+        }
+        return sigma_capture;
+    }
+    
+    // Fission cross section summed over all spin groups
+    double fissionCrossSection(double E) const {
+        double sigma_fission = 0.0;
+        for (const auto& sg : spinGroups_) {
+            sigma_fission += sg.fissionCrossSection(E, entranceParticlePair_);
+        }
+        return sigma_fission;
+    }
+    
+    // Total cross section summed over all spin groups
+    double totalCrossSection(double E) const {
+        double sigma_total = 0.0;
+        for (const auto& sg : spinGroups_) {
+            sigma_total += sg.totalCrossSection(E, entranceParticlePair_);
+        }
+        return sigma_total;
+    }
+    
+    // Get partial cross section for a specific spin group
+    double spinGroupElasticCrossSection(size_t spinGroupIndex, double E) const {
+        if (spinGroupIndex >= spinGroups_.size()) {
+            throw std::out_of_range("Spin group index out of range");
+        }
+        const auto& sg = spinGroups_[spinGroupIndex];
+        return sg.elasticCrossSection(E, entranceParticlePair_);
+    }
+    
+    double spinGroupCaptureCrossSection(size_t spinGroupIndex, double E) const {
+        if (spinGroupIndex >= spinGroups_.size()) {
+            throw std::out_of_range("Spin group index out of range");
+        }
+        const auto& sg = spinGroups_[spinGroupIndex];
+        return sg.captureCrossSection(E, entranceParticlePair_);
+    }
+    
+    double spinGroupFissionCrossSection(size_t spinGroupIndex, double E) const {
+        if (spinGroupIndex >= spinGroups_.size()) {
+            throw std::out_of_range("Spin group index out of range");
+        }
+        const auto& sg = spinGroups_[spinGroupIndex];
+        return sg.fissionCrossSection(E, entranceParticlePair_);
+    }
+    
+    double spinGroupTotalCrossSection(size_t spinGroupIndex, double E) const {
+        if (spinGroupIndex >= spinGroups_.size()) {
+            throw std::out_of_range("Spin group index out of range");
+        }
+        const auto& sg = spinGroups_[spinGroupIndex];
+        return sg.totalCrossSection(E, entranceParticlePair_);
     }
 };
 

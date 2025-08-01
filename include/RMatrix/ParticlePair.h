@@ -53,6 +53,15 @@ public:
     double spin1() const { return spinParticleA_; }
     double spin2() const { return spinParticleB_; }
     int MT() const { return MT_; }
+    
+    // Equality operator for comparing particle pairs
+    bool operator==(const ParticlePair& other) const {
+        return massParticleA_ == other.massParticleA_ && 
+               massParticleB_ == other.massParticleB_ &&
+               spinParticleA_ == other.spinParticleA_ &&
+               spinParticleB_ == other.spinParticleB_ &&
+               MT_ == other.MT_;
+    }
 };
 
 #endif // PARTICLE_PAIR_H
